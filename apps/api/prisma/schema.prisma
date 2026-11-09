@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Usuario {
+  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre              String               @db.VarChar(120)
+  correo              String               @unique @db.VarChar(255)
+  contrasenaHash      String               @map("contrasena_hash") @db.Text
+  rol                 String               @default("estudiante") @db.VarChar(20)
+  activo              Boolean              @default(true)
+  creadoEn            DateTime             @default(now()) @map("creado_en") @db.Timestamptz(6)
+  reservas            Reserva[]
+  tokensActualizacion TokenActualizacion[]
+
+  @@map("usuarios")
+}
+
+model Espacio {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre      String    @db.VarChar(120)
+  edificio    String    @db.VarChar(120)
+  tipo        String    @db.VarChar(20)
+  capacidad   Int
+  descripcion String?   @db.Text
+  activo      Boolean   @default(true)
+  creadoEn    DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+  reservas    Reserva[]
+  horarios    HorarioDisponible[]
+
+  @@index([edificio, capacidad])
+  @@map("espacios")
+}
+
+model HorarioDisponible {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  espacioId   String   @map("espacio_id") @db.Uuid
+  diaSemana   Int      @map("dia_semana")
+  horaInicio  DateTime @map("hora_inicio") @db.Time(0)
+  horaFin     DateTime @map("hora_fin") @db.Time(0)
+  espacio     Espacio  @relation(fields: [espacioId], references: [id], onDelete: Cascade)
+
+  @@unique([espacioId, diaSemana, horaInicio, horaFin])
+  @@index([espacioId, diaSemana])
+  @@map("horarios_disponibles")
+}
+
+model Reserva {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  espacioId   String    @map("espacio_id") @db.Uuid
+  usuarioId   String    @map("usuario_id") @db.Uuid
+  grupo       String?   @db.VarChar(120)
+  proposito   String    @db.VarChar(250)
+  inicio      DateTime  @db.Timestamptz(6)
+  fin         DateTime  @db.Timestamptz(6)
+  estado      String    @default("activa") @db.VarChar(20)
+  creadoEn    DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+  canceladaEn DateTime? @map("cancelada_en") @db.Timestamptz(6)
+  espacio     Espacio   @relation(fields: [espacioId], references: [id], onDelete: Restrict)
+  usuario     Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+
+  @@index([espacioId, inicio, fin])
+  @@index([usuarioId, inicio])
+  @@map("reservas")
+}
+
+model TokenActualizacion {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuarioId  String    @map("usuario_id") @db.Uuid
+  tokenHash  String    @unique @map("token_hash") @db.Text
+  venceEn    DateTime  @map("vence_en") @db.Timestamptz(6)
+  revocadoEn DateTime? @map("revocado_en") @db.Timestamptz(6)
+  creadoEn   DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+  usuario    Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@map("tokens_actualizacion")
+}
+
+model ClaveApi {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre      String    @db.VarChar(120)
+  prefijo     String    @db.VarChar(20)
+  claveHash   String    @unique @map("clave_hash") @db.Text
+  permisos    String[]  @default([])
+  ultimoUsoEn DateTime? @map("ultimo_uso_en") @db.Timestamptz(6)
+  revocadaEn  DateTime? @map("revocada_en") @db.Timestamptz(6)
+  creadoEn    DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+
+  @@map("claves_api")
+}
