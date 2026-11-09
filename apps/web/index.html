@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#102b3f" />
+    <title>ReservaLab | Ingeniería</title>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#inicio"><span class="brand-mark">RL</span><span>Reserva<span class="brand-light">Lab</span><small>FACULTAD DE INGENIERÍA</small></span></a>
+      <nav aria-label="Navegación principal">
+        <button class="nav-button active" data-view="reservas">Reservas</button>
+        <button class="nav-button" data-view="ocupacion">Ocupación actual</button>
+      </nav>
+      <div id="session-status" class="session-status">Sin sesión</div>
+    </header>
+    <main>
+      <section class="hero">
+        <div><p class="eyebrow">ESPACIOS ACADÉMICOS</p><h1>Tu espacio para<br /><em>crear y aprender.</em></h1><p>Consulta disponibilidad y reserva salones y laboratorios de Ingeniería.</p></div>
+        <div class="hero-card"><span class="hero-card-number">01</span><span class="hero-card-label">CONSULTA<br />RESERVA<br />APRENDE</span><div class="hero-grid"></div></div>
+      </section>
+      <section id="view-reservas" class="view">
+        <div id="login-card" class="panel login-panel">
+          <div><p class="eyebrow">BIENVENIDO</p><h2>Inicia sesión</h2><p class="muted">Usa tu cuenta de estudiante, docente o administrador.</p></div>
+          <form id="login-form" class="form-grid">
+            <label>Correo<input name="correo" type="email" autocomplete="username" required placeholder="nombre@universidad.edu" /></label>
+            <label>Contraseña<input name="contrasena" type="password" autocomplete="current-password" required /></label>
+            <button class="button primary" type="submit">Ingresar <span>→</span></button>
+            <p id="login-message" class="message" aria-live="polite"></p>
+          </form>
+        </div>
+        <div id="reservation-dashboard" class="hidden">
+          <div class="section-heading"><div><p class="eyebrow">PANEL PERSONAL</p><h2>Mis reservas</h2></div><button id="logout-button" class="button secondary">Cerrar sesión</button></div>
+          <div class="dashboard-grid">
+            <form id="reservation-form" class="panel form-grid">
+              <div><p class="eyebrow">NUEVA RESERVA</p><h3>Encuentra tu espacio</h3></div>
+              <label>Espacio<select id="space-select" name="espacioId" required><option value="">Cargando espacios…</option></select></label>
+              <label>Fecha<input id="reservation-date" name="fecha" type="date" required /></label>
+              <div class="availability-box"><div class="availability-heading"><span>Disponibilidad del día</span><span>Hora de Guatemala</span></div><ul id="availability-blocks"><li class="muted">Selecciona espacio y fecha para consultar.</li></ul></div>
+              <div class="two-fields"><label>Inicio<input name="inicio" type="time" required /></label><label>Fin<input name="fin" type="time" required /></label></div>
+              <label>Grupo (opcional)<input name="grupo" maxlength="120" placeholder="Ej. 6to semestre, sección D" /></label>
+              <label>Propósito<input name="proposito" maxlength="250" required placeholder="Clase, práctica, reunión…" /></label>
+              <button class="button primary" type="submit">Reservar espacio <span>→</span></button>
+              <p id="reservation-message" class="message" aria-live="polite"></p>
+            </form>
+            <div class="panel list-panel"><div class="panel-heading"><div><p class="eyebrow">AGENDA</p><h3>Reservas registradas</h3></div><button id="refresh-reservations" class="icon-button" aria-label="Actualizar reservas">↻</button></div><div id="my-reservations" class="reservation-list"><p class="muted">Inicia sesión para ver tus reservas.</p></div></div>
+          </div>
+        </div>
+      </section>
+      <section id="view-ocupacion" class="view hidden">
+        <div class="section-heading"><div><p class="eyebrow">ESTADO DEL EDIFICIO</p><h2>Ocupación en este momento</h2><p class="muted">La pantalla se actualiza automáticamente cada 30 segundos.</p></div><span class="live-indicator"><i></i> EN VIVO</span></div>
+        <div class="panel occupancy-panel">
+          <form id="api-key-form" class="inline-form"><label for="api-key-input">API key de lectura</label><input id="api-key-input" type="password" placeholder="rl_live_…" autocomplete="off" required /><button class="button secondary" type="submit">Consultar</button></form>
+          <p id="occupancy-message" class="message" aria-live="polite"></p>
+          <div class="table-wrap"><table><thead><tr><th>Edificio</th><th>Espacio</th><th>Capacidad</th><th>Estado</th><th>Actividad actual</th></tr></thead><tbody id="occupancy-table"><tr><td colspan="5" class="muted">Ingresa una API key para consultar.</td></tr></tbody></table></div>
+          <p class="table-footnote">Datos consultados desde ReservaLab · actualización cada 30 s</p>
+        </div>
+      </section>
+    </main>
+    <footer><span>RESERVALAB</span><span>Facultad de Ingeniería · Universidad Mesoamericana</span></footer>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
