@@ -1,0 +1,67 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: reservalab
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-reservalab_dev}
+    ports:
+      - "${POSTGRES_PORT:-55432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d reservalab"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mockoon:
+    image: mockoon/cli:latest
+    command: ["--data", "/data/notificaciones.json", "--port", "3001", "--hostname", "0.0.0.0"]
+    ports:
+      - "${MOCKOON_PORT:-3001}:3001"
+    volumes:
+      - ./mocks/notificaciones.json:/data/notificaciones.json:ro
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-reservalab_dev}@db:5432/reservalab?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-reservalab-access-secret-local-2026-change-me}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-reservalab-refresh-secret-local-2026-change-me}
+      NOTIFICATIONS_URL: http://mockoon:3001/notifications
+    ports:
+      - "${API_PORT:-3000}:3000"
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      mockoon: { condition: service_started }
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  redis_data:
