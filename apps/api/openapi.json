@@ -1,0 +1,855 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ReservaLab API",
+    "version": "1.0.0",
+    "description": "API para consultar espacios y gestionar reservas de laboratorios y salones. Los nombres de tablas de la base de datos están en español."
+  },
+  "servers": [
+    {
+      "url": "/api/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Autenticación"
+    },
+    {
+      "name": "Espacios"
+    },
+    {
+      "name": "Reservas"
+    },
+    {
+      "name": "API keys"
+    },
+    {
+      "name": "Sistema"
+    },
+    {
+      "name": "Administración"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "JWT": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "ApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    },
+    "schemas": {
+      "Credenciales": {
+        "type": "object",
+        "required": [
+          "correo",
+          "contrasena"
+        ],
+        "properties": {
+          "correo": {
+            "type": "string",
+            "format": "email"
+          },
+          "contrasena": {
+            "type": "string",
+            "minLength": 8
+          }
+        }
+      },
+      "Registro": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Credenciales"
+          },
+          {
+            "type": "object",
+            "required": [
+              "nombre"
+            ],
+            "properties": {
+              "nombre": {
+                "type": "string",
+                "maxLength": 120
+              }
+            }
+          }
+        ]
+      },
+      "EspacioEntrada": {
+        "type": "object",
+        "required": [
+          "nombre",
+          "edificio",
+          "tipo",
+          "capacidad"
+        ],
+        "properties": {
+          "nombre": {
+            "type": "string"
+          },
+          "edificio": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "laboratorio",
+              "salon"
+            ]
+          },
+          "capacidad": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "descripcion": {
+            "type": "string"
+          }
+        }
+      },
+      "ReservaEntrada": {
+        "type": "object",
+        "required": [
+          "espacioId",
+          "proposito",
+          "inicio",
+          "fin"
+        ],
+        "properties": {
+          "espacioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "grupo": {
+            "type": "string"
+          },
+          "proposito": {
+            "type": "string"
+          },
+          "inicio": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fin": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Sistema"
+        ],
+        "summary": "Estado de API, PostgreSQL y Redis",
+        "responses": {
+          "200": {
+            "description": "Estado del sistema"
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "Autenticación"
+        ],
+        "summary": "Registrar estudiante",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Registro"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuario creado y tokens emitidos"
+          },
+          "409": {
+            "description": "Correo ya registrado"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Autenticación"
+        ],
+        "summary": "Iniciar sesión",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Credenciales"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Access y refresh token"
+          },
+          "401": {
+            "description": "Credenciales incorrectas"
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": [
+          "Autenticación"
+        ],
+        "summary": "Renovar tokens con refresh token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "refreshToken"
+                ],
+                "properties": {
+                  "refreshToken": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tokens rotados"
+          },
+          "401": {
+            "description": "Refresh token inválido o revocado"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": [
+          "Autenticación"
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Revocar refresh token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "refreshToken"
+                ],
+                "properties": {
+                  "refreshToken": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sesión cerrada"
+          }
+        }
+      }
+    },
+    "/spaces": {
+      "get": {
+        "tags": [
+          "Espacios"
+        ],
+        "security": [
+          {
+            "JWT": []
+          },
+          {
+            "ApiKey": []
+          }
+        ],
+        "summary": "Listar espacios",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "edificio",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "capacidad",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de espacios; incluye X-Cache HIT o MISS"
+          },
+          "401": {
+            "description": "Falta autenticación"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Espacios"
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Crear espacio (administrador)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EspacioEntrada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Espacio creado"
+          },
+          "403": {
+            "description": "Se requiere administrador"
+          }
+        }
+      }
+    },
+    "/spaces/{id}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "patch": {
+        "tags": [
+          "Espacios"
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Actualizar espacio (administrador)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EspacioEntrada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Espacio actualizado"
+          },
+          "404": {
+            "description": "No encontrado"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Espacios"
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Desactivar espacio (administrador)",
+        "responses": {
+          "200": {
+            "description": "Espacio desactivado"
+          }
+        }
+      }
+    },
+    "/spaces/{id}/availability": {
+      "get": {
+        "tags": [
+          "Espacios"
+        ],
+        "security": [
+          {
+            "JWT": []
+          },
+          {
+            "ApiKey": []
+          }
+        ],
+        "summary": "Consultar bloques libres y ocupados de una fecha",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bloques del día; incluye X-Cache"
+          },
+          "404": {
+            "description": "Espacio no encontrado"
+          }
+        }
+      }
+    },
+    "/reservations": {
+      "post": {
+        "tags": [
+          "Reservas"
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Crear reserva (docente o administrador)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservaEntrada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Reserva confirmada; se avisa a Mockoon"
+          },
+          "409": {
+            "description": "El horario se traslapa"
+          }
+        }
+      }
+    },
+    "/reservations/me": {
+      "get": {
+        "tags": [
+          "Reservas"
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Listar reservas propias",
+        "responses": {
+          "200": {
+            "description": "Reservas del usuario autenticado"
+          }
+        }
+      }
+    },
+    "/reservations/{id}": {
+      "delete": {
+        "tags": [
+          "Reservas"
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Cancelar reserva propia o como administrador",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reserva cancelada"
+          },
+          "403": {
+            "description": "No es dueño ni administrador"
+          }
+        }
+      }
+    },
+    "/api-keys": {
+      "get": {
+        "tags": [
+          "API keys"
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Listar API keys (administrador)",
+        "responses": {
+          "200": {
+            "description": "Lista sin hashes ni claves completas"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "API keys"
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Emitir API key (administrador)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nombre",
+                  "permisos"
+                ],
+                "properties": {
+                  "nombre": {
+                    "type": "string"
+                  },
+                  "permisos": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "read:spaces",
+                        "read:now"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Clave completa visible una sola vez"
+          }
+        }
+      }
+    },
+    "/api-keys/{id}": {
+      "delete": {
+        "tags": [
+          "API keys"
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Revocar API key (administrador)",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Clave revocada"
+          }
+        }
+      }
+    },
+    "/now": {
+      "get": {
+        "tags": [
+          "Sistema"
+        ],
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "summary": "Ocupación actual por edificio (requiere read:now)",
+        "responses": {
+          "200": {
+            "description": "Ocupación actual; incluye X-Cache"
+          },
+          "403": {
+            "description": "La key no tiene permiso read:now"
+          },
+          "429": {
+            "description": "Límite de solicitudes alcanzado"
+          }
+        }
+      }
+    },
+    "/admin/users": {
+      "get": {
+        "tags": [
+          "Administración"
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Listar usuarios (administrador)",
+        "responses": {
+          "200": {
+            "description": "Usuarios sin datos de contraseña"
+          }
+        }
+      }
+    },
+    "/admin/users/{id}": {
+      "patch": {
+        "tags": [
+          "Administración"
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Cambiar rol o estado de usuario (administrador)",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rol": {
+                    "type": "string",
+                    "enum": [
+                      "estudiante",
+                      "docente",
+                      "administrador"
+                    ]
+                  },
+                  "activo": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Usuario actualizado"
+          },
+          "400": {
+            "description": "Datos inválidos"
+          },
+          "404": {
+            "description": "Usuario no encontrado"
+          }
+        }
+      }
+    },
+    "/spaces/{id}/schedules": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Espacios"
+        ],
+        "security": [
+          {
+            "JWT": []
+          },
+          {
+            "ApiKey": []
+          }
+        ],
+        "summary": "Listar horarios semanales del espacio",
+        "responses": {
+          "200": {
+            "description": "Horarios en hora local de Guatemala"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Espacios"
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Crear horario disponible (administrador)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "diaSemana",
+                  "horaInicio",
+                  "horaFin"
+                ],
+                "properties": {
+                  "diaSemana": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 7,
+                    "description": "1 lunes, 7 domingo"
+                  },
+                  "horaInicio": {
+                    "type": "string",
+                    "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                  },
+                  "horaFin": {
+                    "type": "string",
+                    "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Horario creado"
+          },
+          "409": {
+            "description": "Horario traslapado"
+          }
+        }
+      }
+    },
+    "/spaces/{id}/schedules/{horarioId}": {
+      "delete": {
+        "tags": [
+          "Espacios"
+        ],
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "summary": "Eliminar horario (administrador)",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "horarioId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Horario eliminado"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "uuid": "83afcaa2-4d96-46a3-a26a-aeb542d73d04",
+  "lastMigration": 29,
+  "name": "ReservaLab - Servicio simulado de notificaciones",
+  "endpointPrefix": "",
+  "latency": 100,
+  "port": 3001,
+  "hostname": "0.0.0.0",
+  "folders": [],
+  "routes": [
+    {
+      "uuid": "5207f4f3-a767-49d0-a838-8d0b726a2660",
+      "documentation": "Recibe avisos de reserva confirmada o cancelada",
+      "method": "post",
+      "endpoint": "notifications",
+      "responses": [
+        {
+          "uuid": "d235092d-7c8e-48ee-a5f6-026675eea337",
+          "body": "{\n  \"recibida\": true,\n  \"evento\": \"{{body 'evento'}}\",\n  \"mensaje\": \"Notificación simulada por Mockoon\"\n}",
+          "latency": 100,
+          "statusCode": 200,
+          "label": "Notificación recibida",
+          "headers": [{ "key": "Content-Type", "value": "application/json" }],
+          "filePath": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "databucketID": "",
+          "bodyType": "INLINE",
+          "crudKey": "id"
+        }
+      ],
+      "enabled": true,
+      "responseMode": null,
+      "type": "http"
+    }
+  ],
+  "proxyMode": false,
+  "proxyHost": "",
+  "proxyRemovePrefix": false,
+  "tlsOptions": { "enabled": false, "type": "CERT", "pfxPath": "", "certPath": "", "keyPath": "", "caPath": "", "passphrase": "" },
+  "cors": true,
+  "headers": [{ "key": "Content-Type", "value": "application/json" }],
+  "proxyReqHeaders": [{ "key": "", "value": "" }],
+  "proxyResHeaders": [{ "key": "", "value": "" }],
+  "data": [],
+  "rootChildren": [{ "type": "route", "uuid": "5207f4f3-a767-49d0-a838-8d0b726a2660" }]
+}

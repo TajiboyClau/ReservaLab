@@ -1,0 +1,31 @@
+import express from "express";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import swaggerUi from "swagger-ui-express";
+import { prisma } from "./db/prisma.js";
+import { redis } from "./db/redis.js";
+import { authRoutes } from "./rutas/auth.routes.js";
+import { espaciosRoutes } from "./rutas/espacios.routes.js";
+import { reservasRoutes } from "./rutas/reservas.routes.js";
+import { clavesApiRoutes } from "./rutas/api-keys.routes.js";
+import { ocupacionRoutes } from "./rutas/ocupacion.routes.js";
+import { usuariosRoutes } from "./rutas/usuarios.routes.js";
+import { manejadorErrores } from "./middleware/errores.js";
+
+export const app = express();
+app.use(express.json());
+const openapi = JSON.parse(readFileSync(resolve(process.cwd(), "openapi.json"), "utf8"));
+app.get("/docs/openapi.json", (_req, res) => res.json(openapi));
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapi));
+app.get("/api/v1/health", async (_req, res) => {
+  await prisma.$queryRaw`SELECT 1`;
+  res.json({ estado: "ok", baseDeDatos: "conectada", cache: redis.isReady ? "conectada" : "desconectada" });
+});
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/admin/users", usuariosRoutes);
+app.use("/api/v1/spaces", espaciosRoutes);
+app.use("/api/v1/reservations", reservasRoutes);
+app.use("/api/v1/api-keys", clavesApiRoutes);
+app.use("/api/v1/now", ocupacionRoutes);
+app.use((_req, res) => res.status(404).json({ error: "Ruta no encontrada" }));
+app.use(manejadorErrores);
