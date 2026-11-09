@@ -1,0 +1,66 @@
+Table usuarios {
+  id uuid [pk]
+  nombre varchar(120) [not null]
+  correo varchar(255) [not null, unique]
+  contrasena_hash text [not null]
+  rol varchar(20) [not null, note: 'estudiante, docente o administrador']
+  creado_en timestamp [not null]
+}
+
+Table espacios {
+  id uuid [pk]
+  nombre varchar(120) [not null]
+  edificio varchar(120) [not null]
+  tipo varchar(20) [not null, note: 'laboratorio o salon']
+  capacidad int [not null]
+  activo boolean [not null, default: true]
+}
+
+Table horarios_disponibles {
+  id uuid [pk]
+  espacio_id uuid [not null]
+  dia_semana int [not null, note: '1 lunes ... 7 domingo']
+  hora_inicio time [not null]
+  hora_fin time [not null]
+  indexes {
+    (espacio_id, dia_semana, hora_inicio, hora_fin) [unique]
+  }
+}
+
+Table reservas {
+  id uuid [pk]
+  espacio_id uuid [not null]
+  usuario_id uuid [not null]
+  grupo varchar(120)
+  proposito varchar(250) [not null]
+  inicio timestamp [not null]
+  fin timestamp [not null]
+  estado varchar(20) [not null, default: 'activa', note: 'activa o cancelada']
+  creado_en timestamp [not null]
+  cancelada_en timestamp
+}
+
+Table tokens_actualizacion {
+  id uuid [pk]
+  usuario_id uuid [not null]
+  token_hash text [not null, unique]
+  vence_en timestamp [not null]
+  revocado_en timestamp
+  creado_en timestamp [not null]
+}
+
+Table claves_api {
+  id uuid [pk]
+  nombre varchar(120) [not null]
+  prefijo varchar(20) [not null]
+  clave_hash text [not null, unique]
+  permisos text [not null, note: 'Permisos separados, por ejemplo read:now']
+  ultimo_uso_en timestamp
+  revocada_en timestamp
+  creado_en timestamp [not null]
+}
+
+Ref: reservas.espacio_id > espacios.id
+Ref: reservas.usuario_id > usuarios.id
+Ref: horarios_disponibles.espacio_id > espacios.id
+Ref: tokens_actualizacion.usuario_id > usuarios.id
