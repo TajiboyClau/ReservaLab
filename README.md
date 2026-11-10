@@ -14,15 +14,30 @@ El equipo de trabajo de este repositorio es una pareja conformada por:
 - Docker Desktop con Docker Compose.
 - Node.js 22.12 o posterior y pnpm 11 para desarrollo local.
 
-## Levantar el sistema completo
+## Clonar y ejecutar el sistema completo
 
-En la raíz del repositorio, ejecuta:
+Clona el repositorio y entra a su carpeta:
+
+```powershell
+git clone https://github.com/TajiboyClau/ReservaLab.git
+cd ReservaLab
+```
+
+Abre Docker Desktop y, desde esa carpeta, construye y levanta los servicios:
 
 ```powershell
 docker compose up --build -d
 ```
 
-Al terminar de iniciar:
+La primera ejecución puede tardar mientras Docker descarga imágenes y construye la web y la API. El contenedor de la API aplica las migraciones de PostgreSQL y carga los datos de demostración al iniciar.
+
+Comprueba que los contenedores estén arriba:
+
+```powershell
+docker compose ps
+```
+
+Al terminar de iniciar, abre la web o la documentación de la API:
 
 - Web: `http://localhost:8080`
 - API: `http://localhost:3000/api/v1`
@@ -31,7 +46,7 @@ Al terminar de iniciar:
 - PostgreSQL para DBeaver: host `localhost`, puerto `55432`, base `reservalab`, usuario `postgres`, contraseña `reservalab_dev`.
 - Redis: host `localhost`, puerto `6379`.
 
-La configuración predeterminada es para desarrollo académico. PostgreSQL se publica en el puerto 55432 para evitar conflictos con instalaciones locales. Puedes cambiar los puertos y secretos en una copia local de `.env.example` llamada `.env`.
+La configuración predeterminada es para desarrollo académico. PostgreSQL se publica en el puerto 55432 para evitar conflictos con instalaciones locales. Para cambiar puertos o secretos, copia `.env.example` a `.env` en la raíz y edita esa copia antes de iniciar Compose. No subas `.env` al repositorio.
 
 El primer inicio aplica las migraciones y carga datos de demostración. Usuarios locales:
 
@@ -44,6 +59,15 @@ El seed también crea un laboratorio llamado **Laboratorio 1**. Estas credencial
 El laboratorio de demostración tiene horario de lunes a domingo, de 07:00 a 22:00 (hora de Guatemala). El administrador puede definir, consultar y eliminar rangos semanales desde la API.
 
 Para probar la vista **Ocupación actual**, ejecuta `pnpm dev:cli`, inicia sesión como administrador y elige `2` para emitir una API key con permiso `read:now`. Cópiala cuando aparezca, porque solo se muestra una vez, y pégala en la vista de ocupación del sitio.
+
+Para ver registros de los servicios o apagarlos:
+
+```powershell
+docker compose logs -f
+docker compose down
+```
+
+`docker compose down` conserva los datos de PostgreSQL y Redis. Para borrar también los volúmenes y todos los datos locales, usa `docker compose down -v`.
 
 ## Desarrollo sin Docker para PostgreSQL
 
@@ -89,12 +113,15 @@ La clave API completa se muestra únicamente al crearla; PostgreSQL guarda su ha
 
 ## Comandos útiles
 
+Ejecuta estos comandos desde la raíz del repositorio. `pnpm install` es necesario para el desarrollo local y para correr las pruebas; Docker instala las dependencias dentro de sus imágenes al construir.
+
 ```powershell
 pnpm install
 pnpm build
 pnpm dev:api
 pnpm dev:web
 pnpm dev:cli
+pnpm --filter @reservalab/api test
 pnpm --filter @reservalab/api test:coverage
 ```
 
@@ -112,7 +139,16 @@ pnpm --filter @reservalab/api test:integration
 
 La disponibilidad se muestra dentro de los horarios definidos para cada día, en hora de Guatemala. La web lista los tramos libres y ocupados; el servidor verifica el horario y vuelve a validar traslapes al guardar.
 
-## Declaración de IA y contribuciones
+## Documentación técnica
+
+- [Arquitectura, componentes, flujos y atributos de calidad](docs/arquitectura.md)
+- [Modelo de datos](docs/modelo-datos.dbml)
+- [Especificación OpenAPI](apps/api/openapi.json), también disponible en `http://localhost:3000/docs` cuando el sistema está levantado.
+- [Decisiones de arquitectura (ADR)](docs/adr/)
+
+El README reúne los pasos de instalación y ejecución; los documentos enlazados contienen el detalle de arquitectura, modelo de datos y contrato de la API.
+
+## Contribuciones
 
 El trabajo se dividió entre la implementación inicial de ReservaLab y las mejoras realizadas después de probar el sistema. Los aportes se describen según los cambios que registra el historial del repositorio.
 
@@ -120,8 +156,6 @@ El trabajo se dividió entre la implementación inicial de ReservaLab y las mejo
 |---|---|
 | Claudia Estefanía Zorin Tajiboy | Implementación principal: estructura del monorepo y entorno Docker, modelo de datos y migraciones de PostgreSQL, API de autenticación y gestión de usuarios, espacios, horarios y reservas. También integró las API keys, Redis y Mockoon, creó la interfaz web inicial y el CLI, y añadió las pruebas iniciales y la documentación de arquitectura. |
 | Wilberth Daniel Velasquez Flores | Mejoras posteriores: validación de los límites de horario con pruebas de regresión, rotación de tokens de sesión en una transacción y separación de la consulta de ocupación en un servicio. También aisló la prueba de notificaciones, configuró Turborepo y actualizó la interfaz con la identidad visual de la UMES, la cuenta regresiva y la opción para cambiar la clave de lectura. |
-
-Se utilizó OpenAI Codex como apoyo para preparar, revisar y probar cambios en el código, el modelo de datos, la configuración y la documentación.
 
 ## Git
 
