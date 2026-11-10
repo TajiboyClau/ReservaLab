@@ -114,16 +114,14 @@ La disponibilidad se muestra dentro de los horarios definidos para cada día, en
 
 ## Declaración de IA y contribuciones
 
-Se utilizó OpenAI Codex como apoyo para preparar y revisar el modelo de datos, código inicial, documentación y configuración. El equipo declara los siguientes aportes compartidos y debe revisar y poder explicar cada módulo durante la defensa.
+El trabajo se dividió entre la implementación inicial de ReservaLab y las mejoras realizadas después de probar el sistema. Los aportes se describen según los cambios que registra el historial del repositorio.
 
-Completen esta tabla con los cambios que cada integrante efectivamente realizó o revisó:
-
-| Integrante | Aportes realizados |
+| Integrante | Aportes |
 |---|---|
-| Wilberth Daniel Velasquez Flores | Trabajo en pareja: definición del alcance, revisión del flujo, validación funcional y preparación de la demostración. |
-| Claudia Estefanía Zorin Tajiboy | Trabajo en pareja: definición del alcance, revisión del flujo, validación funcional y preparación de la demostración. |
+| Claudia Estefanía Zorin Tajiboy | Implementación principal: estructura del monorepo y entorno Docker, modelo de datos y migraciones de PostgreSQL, API de autenticación y gestión de usuarios, espacios, horarios y reservas. También integró las API keys, Redis y Mockoon, creó la interfaz web inicial y el CLI, y añadió las pruebas iniciales y la documentación de arquitectura. |
+| Wilberth Daniel Velasquez Flores | Mejoras posteriores: validación de los límites de horario con pruebas de regresión, rotación de tokens de sesión en una transacción y separación de la consulta de ocupación en un servicio. También aisló la prueba de notificaciones, configuró Turborepo y actualizó la interfaz con la identidad visual de la UMES, la cuenta regresiva y la opción para cambiar la clave de lectura. |
 
-Ambos integrantes deben verificar esta descripción, participar en la revisión del código y poder explicar el proyecto entregado.
+Se utilizó OpenAI Codex como apoyo para preparar, revisar y probar cambios en el código, el modelo de datos, la configuración y la documentación.
 
 ## Git
 
