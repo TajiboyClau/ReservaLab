@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
@@ -17,13 +17,18 @@ const refreshSecret = () => process.env.JWT_REFRESH_SECRET || "";
 
 function emitir(usuario: { id: string; rol: string }) {
   const accessToken = jwt.sign({ rol: usuario.rol }, accessSecret(), { subject: usuario.id, expiresIn: "15m" });
-  const refreshToken = jwt.sign({}, refreshSecret(), { subject: usuario.id, expiresIn: "7d" });
+  const refreshToken = jwt.sign({}, refreshSecret(), { subject: usuario.id, expiresIn: "7d", jwtid: randomUUID() });
   return { accessToken, refreshToken };
 }
 
-async function guardarRefresh(usuarioId: string, token: string) {
+function datosRefresh(usuarioId: string, token: string) {
   const datos = jwt.decode(token) as jwt.JwtPayload;
-  await tokensRepo.crear(usuarioId, hash(token), new Date((datos.exp ?? 0) * 1000));
+  return { usuarioId, tokenHash: hash(token), venceEn: new Date((datos.exp ?? 0) * 1000) };
+}
+
+async function guardarRefresh(usuarioId: string, token: string) {
+  const { tokenHash, venceEn } = datosRefresh(usuarioId, token);
+  await tokensRepo.crear(usuarioId, tokenHash, venceEn);
 }
 
 export const authService = {
@@ -67,12 +72,12 @@ export const authService = {
       throw Object.assign(new Error("Refresh token inválido o vencido"), { statusCode: 401 });
     }
     const sesion = await tokensRepo.vigente(hash(refreshToken));
-    if (!sesion || typeof payload.sub !== "string") throw Object.assign(new Error("Sesión revocada o vencida"), { statusCode: 401 });
-    await tokensRepo.revocar(sesion.id);
-    const usuario = await usuariosRepo.porId(payload.sub);
+    if (!sesion || sesion.usuarioId !== payload.sub) throw Object.assign(new Error("Sesión revocada o vencida"), { statusCode: 401 });
+    const usuario = await usuariosRepo.porId(sesion.usuarioId);
     if (!usuario || !usuario.activo) throw Object.assign(new Error("La cuenta no está disponible"), { statusCode: 401 });
     const tokens = emitir(usuario);
-    await guardarRefresh(usuario.id, tokens.refreshToken);
+    const rotado = await tokensRepo.rotar(sesion.id, datosRefresh(usuario.id, tokens.refreshToken));
+    if (!rotado) throw Object.assign(new Error("Sesión revocada o vencida"), { statusCode: 401 });
     return tokens;
   },
 

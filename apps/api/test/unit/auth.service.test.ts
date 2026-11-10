@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 
 const { usuariosRepo, tokensRepo } = vi.hoisted(() => ({
   usuariosRepo: { porCorreo: vi.fn(), porId: vi.fn(), crear: vi.fn(), listar: vi.fn(), actualizar: vi.fn() },
-  tokensRepo: { crear: vi.fn(), vigente: vi.fn(), revocar: vi.fn() },
+  tokensRepo: { crear: vi.fn(), vigente: vi.fn(), revocar: vi.fn(), rotar: vi.fn() },
 }));
 vi.mock("../../src/repositorios/usuarios.repo.js", () => ({ usuariosRepo }));
 vi.mock("../../src/repositorios/tokens.repo.js", () => ({ tokensRepo }));
@@ -22,6 +22,7 @@ beforeEach(async () => {
   usuariosRepo.porCorreo.mockResolvedValue(usuario);
   usuariosRepo.porId.mockResolvedValue(usuario);
   usuariosRepo.crear.mockImplementation(async (datos) => ({ ...usuario, ...datos, rol: "estudiante" }));
+  tokensRepo.rotar.mockResolvedValue(true);
   tokensRepo.vigente.mockResolvedValue({ id: "token-row-1", usuarioId: usuario.id });
 });
 
@@ -71,9 +72,9 @@ describe("authService", () => {
   it("rota y revoca refresh token al renovarlo", async () => {
     const viejo = jwt.sign({}, refreshSecret, { subject: usuario.id, expiresIn: "7d" });
     const nuevos = await authService.renovar({ refreshToken: viejo });
-    expect(tokensRepo.revocar).toHaveBeenCalledWith("token-row-1");
+    expect(tokensRepo.rotar).toHaveBeenCalledWith("token-row-1", expect.objectContaining({ usuarioId: usuario.id }));
     expect(jwt.verify(nuevos.accessToken, accessSecret)).toMatchObject({ sub: usuario.id });
-    expect(tokensRepo.crear).toHaveBeenCalledTimes(1);
+    expect(nuevos.refreshToken).not.toBe(viejo);
   });
 
   it("rechaza refresh inválido, revocado o asociado a usuario inactivo", async () => {
