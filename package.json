@@ -5,12 +5,15 @@
   "scripts": {
     "dev:api": "pnpm --filter @reservalab/api dev",
     "predev:api": "pnpm --filter @reservalab/shared build",
-    "build": "pnpm --filter @reservalab/shared build && pnpm --filter @reservalab/api build && pnpm --filter @reservalab/web build && pnpm --filter @reservalab/cli build",
+    "build": "turbo run build",
     "build:api": "pnpm --filter @reservalab/shared build && pnpm --filter @reservalab/api build",
     "dev:web": "pnpm --filter @reservalab/web dev",
     "dev:cli": "pnpm --filter @reservalab/cli dev",
     "db:migrate": "pnpm --filter @reservalab/api db:migrate",
     "db:generate": "pnpm --filter @reservalab/api db:generate",
     "db:seed": "pnpm --filter @reservalab/api db:seed"
+  },
+  "devDependencies": {
+    "turbo": "^2.11.10"
   }
 }

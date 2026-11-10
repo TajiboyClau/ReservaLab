@@ -5,3 +5,4 @@ dist/
 !.env.example
 apps/api/src/generated/
 coverage/
+.turbo
