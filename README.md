@@ -156,7 +156,3 @@ El trabajo se dividió entre la implementación inicial de ReservaLab y las mejo
 |---|---|
 | Claudia Estefanía Zorin Tajiboy | Implementación principal: estructura del monorepo y entorno Docker, modelo de datos y migraciones de PostgreSQL, API de autenticación y gestión de usuarios, espacios, horarios y reservas. También integró las API keys, Redis y Mockoon, creó la interfaz web inicial y el CLI, y añadió las pruebas iniciales y la documentación de arquitectura. |
 | Wilberth Daniel Velasquez Flores | Mejoras posteriores: validación de los límites de horario con pruebas de regresión, rotación de tokens de sesión en una transacción y separación de la consulta de ocupación en un servicio. También aisló la prueba de notificaciones, configuró Turborepo y actualizó la interfaz con la identidad visual de la UMES, la cuenta regresiva y la opción para cambiar la clave de lectura. |
-
-## Git
-
-Usen commits pequeños con Conventional Commits, por ejemplo `feat(api): agregar reserva` o `test(reservas): validar traslapes`. Ambos integrantes deben participar en el historial y revisar cambios del otro.
