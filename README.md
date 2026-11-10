@@ -9,27 +9,44 @@ El equipo de trabajo de este repositorio es una pareja conformada por:
 - Wilberth Daniel Velasquez Flores - 202408061
 - Claudia Estefanía Zorin Tajiboy - 202408031
 
-## Requisitos
+## Instalaciones necesarias
 
-- Docker Desktop con Docker Compose.
-- Node.js 22.12 o posterior y pnpm 11 para desarrollo local.
+Para ejecutar la aplicación completa, instala **Docker Desktop** y déjalo abierto. Docker Desktop incluye Docker Engine y Docker Compose, que ejecutan PostgreSQL, Redis, Mockoon, la API y la web en contenedores.
 
-## Clonar y ejecutar el sistema completo
-
-Clona el repositorio y entra a su carpeta:
+Para emitir la API key desde el CLI, correr pruebas o trabajar sobre el código, instala además **Node.js 22.12 o posterior** y **pnpm 11.25.0**. En Windows, después de instalar Node.js, abre PowerShell y ejecuta:
 
 ```powershell
-git clone https://github.com/TajiboyClau/ReservaLab.git
-cd ReservaLab
+npm install --global pnpm@11.25.0
 ```
 
-Abre Docker Desktop y, desde esa carpeta, construye y levanta los servicios:
+Comprueba las instalaciones:
+
+```powershell
+node --version
+pnpm --version
+docker --version
+docker compose version
+```
+
+Node.js y pnpm no son necesarios para levantar solamente la aplicación con Docker. DBeaver es opcional y solo sirve para conectarse y revisar PostgreSQL desde una interfaz gráfica.
+
+## Instalar dependencias del proyecto
+
+Abre PowerShell en la carpeta del proyecto. Instala los paquetes si vas a usar el CLI, desarrollo local o pruebas:
+
+```powershell
+pnpm install
+```
+
+## Iniciar el sistema completo con Docker
+
+Con Docker Desktop abierto, ejecuta desde la raíz del proyecto:
 
 ```powershell
 docker compose up --build -d
 ```
 
-La primera ejecución puede tardar mientras Docker descarga imágenes y construye la web y la API. El contenedor de la API aplica las migraciones de PostgreSQL y carga los datos de demostración al iniciar.
+La primera ejecución puede tardar mientras Docker descarga las imágenes de PostgreSQL 17, Redis 7, Mockoon, Node.js y Nginx y construye la API y la web. No hay que instalar PostgreSQL ni Redis aparte. El contenedor de la API aplica las migraciones de PostgreSQL y carga los datos de demostración al iniciar.
 
 Comprueba que los contenedores estén arriba:
 
@@ -58,7 +75,7 @@ El primer inicio aplica las migraciones y carga datos de demostración. Usuarios
 El seed también crea un laboratorio llamado **Laboratorio 1**. Estas credenciales son solo para el entorno de demostración.
 El laboratorio de demostración tiene horario de lunes a domingo, de 07:00 a 22:00 (hora de Guatemala). El administrador puede definir, consultar y eliminar rangos semanales desde la API.
 
-Para probar la vista **Ocupación actual**, ejecuta `pnpm dev:cli`, inicia sesión como administrador y elige `2` para emitir una API key con permiso `read:now`. Cópiala cuando aparezca, porque solo se muestra una vez, y pégala en la vista de ocupación del sitio.
+Para probar la vista **Ocupación actual**, primero instala las dependencias con `pnpm install`. Luego ejecuta `pnpm dev:cli`, inicia sesión como administrador y elige `2` para emitir una API key con permiso `read:now`. Cópiala cuando aparezca, porque solo se muestra una vez, y pégala en la vista de ocupación del sitio.
 
 Para ver registros de los servicios o apagarlos:
 
