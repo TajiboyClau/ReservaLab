@@ -52,6 +52,7 @@
         <div class="section-heading"><div><p class="eyebrow">ESTADO DEL EDIFICIO</p><h2>Ocupación en este momento</h2><p class="muted">La pantalla se actualiza automáticamente cada 30 segundos.</p></div><span class="live-indicator"><i></i> EN VIVO</span></div>
         <div class="panel occupancy-panel">
           <form id="api-key-form" class="inline-form"><label for="api-key-input">API key de lectura</label><input id="api-key-input" type="password" placeholder="rl_live_…" autocomplete="off" required /><button class="button secondary" type="submit">Consultar</button></form>
+          <button id="show-api-key-form" class="button secondary hidden" type="button" aria-controls="api-key-form">Cambiar clave</button>
           <p id="occupancy-message" class="message" aria-live="polite"></p>
           <div class="table-wrap"><table><thead><tr><th>Edificio</th><th>Espacio</th><th>Capacidad</th><th>Estado</th><th>Actividad actual</th></tr></thead><tbody id="occupancy-table"><tr><td colspan="5" class="muted">Ingresa una API key para consultar.</td></tr></tbody></table></div>
           <p class="table-footnote">Datos consultados desde ReservaLab<span id="occupancy-countdown"></span></p>

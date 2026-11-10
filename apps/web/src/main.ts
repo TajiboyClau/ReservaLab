@@ -170,6 +170,7 @@ async function cargarOcupacion() {
       cuerpo.append(fila);
     }
     setMessage("#occupancy-message", "Ocupación actualizada.", true);
+    return true;
   } catch (error) {
     setMessage("#occupancy-message", (error as Error).message);
   } finally {
@@ -178,8 +179,25 @@ async function cargarOcupacion() {
   }
 }
 
-el<HTMLFormElement>("#api-key-form").addEventListener("submit", async (event) => {
-  event.preventDefault(); claveApi = el<HTMLInputElement>("#api-key-input").value.trim(); await cargarOcupacion();
+const formularioClave = el<HTMLFormElement>("#api-key-form");
+const campoClave = el<HTMLInputElement>("#api-key-input");
+const botonCambiarClave = el<HTMLButtonElement>("#show-api-key-form");
+
+formularioClave.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  claveApi = campoClave.value.trim();
+  if (await cargarOcupacion()) {
+    formularioClave.reset();
+    formularioClave.classList.add("hidden");
+    botonCambiarClave.classList.remove("hidden");
+    botonCambiarClave.focus();
+  }
+});
+
+botonCambiarClave.addEventListener("click", () => {
+  botonCambiarClave.classList.add("hidden");
+  formularioClave.classList.remove("hidden");
+  campoClave.focus();
 });
 function actualizarContadorOcupacion() {
   if (!proximaConsulta || el<HTMLElement>("#view-ocupacion").classList.contains("hidden")) return;
