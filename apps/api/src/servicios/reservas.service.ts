@@ -11,10 +11,9 @@ function fechaLocal(fecha: Date) {
   const valor = (tipo: string) => partes.find((p) => p.type === tipo)!.value;
   return `${valor("year")}-${valor("month")}-${valor("day")}`;
 }
-function horaLocal(fecha: Date) {
-  return new Intl.DateTimeFormat("en-GB", { timeZone: zonaGuatemala, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(fecha);
+function fechaHoraHorario(fecha: string, hora: Date) {
+  return new Date(`${fecha}T${hora.toISOString().slice(11, 23)}-06:00`);
 }
-const horaHorario = (fecha: Date) => fecha.toISOString().slice(11, 16);
 
 export const reservasService = {
   async crear(usuarioId: string, entrada: unknown) {
@@ -23,10 +22,14 @@ export const reservasService = {
     const espacio = await reservasRepo.espacio(datos.espacioId);
     if (!espacio || !espacio.activo) throw Object.assign(new Error("Espacio no encontrado o inactivo"), { statusCode: 404 });
     const fechaInicio = fechaLocal(datos.inicio);
-    if (fechaInicio !== fechaLocal(new Date(datos.fin.getTime() - 1))) throw Object.assign(new Error("La reserva debe iniciar y finalizar el mismo día local"), { statusCode: 400 });
+    if (fechaInicio !== fechaLocal(datos.fin)) throw Object.assign(new Error("La reserva debe iniciar y finalizar el mismo día local"), { statusCode: 400 });
     const dia = new Date(`${fechaInicio}T12:00:00-06:00`).getUTCDay() || 7;
     const horarios = await horariosRepo.deDia(datos.espacioId, dia);
-    const dentroDeHorario = horarios.some((horario) => horaLocal(datos.inicio) >= horaHorario(horario.horaInicio) && horaLocal(datos.fin) <= horaHorario(horario.horaFin));
+    const dentroDeHorario = horarios.some((horario) => {
+      const apertura = fechaHoraHorario(fechaInicio, horario.horaInicio);
+      const cierre = fechaHoraHorario(fechaInicio, horario.horaFin);
+      return datos.inicio >= apertura && datos.fin <= cierre;
+    });
     if (!dentroDeHorario) throw Object.assign(new Error("La reserva debe estar dentro de un horario habilitado para ese día"), { statusCode: 400 });
     if (await reservasRepo.traslape(datos.espacioId, datos.inicio, datos.fin)) {
       throw Object.assign(new Error("El espacio ya está reservado en ese horario"), { statusCode: 409 });
@@ -70,8 +73,8 @@ export const reservasService = {
     const dia = new Date(`${fecha}T12:00:00-06:00`).getUTCDay() || 7;
     const horarios = await horariosRepo.deDia(espacioId, dia);
     for (const horario of horarios) {
-      const apertura = new Date(`${fecha}T${horaHorario(horario.horaInicio)}:00-06:00`);
-      const cierre = new Date(`${fecha}T${horaHorario(horario.horaFin)}:00-06:00`);
+      const apertura = fechaHoraHorario(fecha, horario.horaInicio);
+      const cierre = fechaHoraHorario(fecha, horario.horaFin);
       let cursor = apertura;
       for (const reserva of reservas.filter((r) => r.inicio < cierre && r.fin > apertura)) {
         const bloqueInicio = reserva.inicio < apertura ? apertura : reserva.inicio;

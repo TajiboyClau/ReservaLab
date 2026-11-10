@@ -38,6 +38,20 @@ describe("reservasService", () => {
     expect(repo.crear).not.toHaveBeenCalled();
   });
 
+  it.each(["2026-11-09T22:00:59-06:00", "2026-11-10T00:00:00-06:00"])(
+    "rechaza una reserva que termina fuera de horario (%s)",
+    async (finFueraDeHorario) => {
+      await expect(reservasService.crear("user-1", { ...entrada, fin: finFueraDeHorario }))
+        .rejects.toMatchObject({ statusCode: 400 });
+      expect(repo.crear).not.toHaveBeenCalled();
+    },
+  );
+
+  it("acepta una reserva que termina exactamente al cierre", async () => {
+    await expect(reservasService.crear("user-1", { ...entrada, fin: "2026-11-09T22:00:00-06:00" }))
+      .resolves.toMatchObject({ id: "reserva-1" });
+  });
+
   it("rechaza espacios inexistentes o inactivos", async () => {
     repo.espacio.mockResolvedValueOnce(null);
     await expect(reservasService.crear("user-1", entrada)).rejects.toMatchObject({ statusCode: 404 });
