@@ -10,6 +10,8 @@ let accessToken = "";
 let refreshToken = "";
 let espacios: Espacio[] = [];
 let claveApi = "";
+const intervaloOcupacion = 30_000;
+let proximaConsulta = 0;
 
 const el = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 const api = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
@@ -150,6 +152,8 @@ document.querySelectorAll<HTMLButtonElement>(".nav-button").forEach((boton) => b
 
 async function cargarOcupacion() {
   if (!claveApi) return;
+  proximaConsulta = 0;
+  el<HTMLElement>("#occupancy-countdown").textContent = " · Actualizando…";
   const cuerpo = el<HTMLElement>("#occupancy-table");
   try {
     const respuesta = await fetch("/api/v1/now", { headers: { "X-API-Key": claveApi } });
@@ -166,10 +170,25 @@ async function cargarOcupacion() {
       cuerpo.append(fila);
     }
     setMessage("#occupancy-message", "Ocupación actualizada.", true);
-  } catch (error) { setMessage("#occupancy-message", (error as Error).message); }
+  } catch (error) {
+    setMessage("#occupancy-message", (error as Error).message);
+  } finally {
+    proximaConsulta = Date.now() + intervaloOcupacion;
+    actualizarContadorOcupacion();
+  }
 }
 
 el<HTMLFormElement>("#api-key-form").addEventListener("submit", async (event) => {
   event.preventDefault(); claveApi = el<HTMLInputElement>("#api-key-input").value.trim(); await cargarOcupacion();
 });
-setInterval(() => { if (!el<HTMLElement>("#view-ocupacion").classList.contains("hidden")) void cargarOcupacion(); }, 30_000);
+function actualizarContadorOcupacion() {
+  if (!proximaConsulta || el<HTMLElement>("#view-ocupacion").classList.contains("hidden")) return;
+  const segundos = Math.ceil((proximaConsulta - Date.now()) / 1000);
+  if (segundos <= 0) {
+    void cargarOcupacion();
+    return;
+  }
+  el<HTMLElement>("#occupancy-countdown").textContent = ` · Próxima actualización en ${segundos} s`;
+}
+
+setInterval(actualizarContadorOcupacion, 1000);

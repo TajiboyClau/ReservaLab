@@ -54,7 +54,7 @@
           <form id="api-key-form" class="inline-form"><label for="api-key-input">API key de lectura</label><input id="api-key-input" type="password" placeholder="rl_live_…" autocomplete="off" required /><button class="button secondary" type="submit">Consultar</button></form>
           <p id="occupancy-message" class="message" aria-live="polite"></p>
           <div class="table-wrap"><table><thead><tr><th>Edificio</th><th>Espacio</th><th>Capacidad</th><th>Estado</th><th>Actividad actual</th></tr></thead><tbody id="occupancy-table"><tr><td colspan="5" class="muted">Ingresa una API key para consultar.</td></tr></tbody></table></div>
-          <p class="table-footnote">Datos consultados desde ReservaLab · actualización cada 30 s</p>
+          <p class="table-footnote">Datos consultados desde ReservaLab<span id="occupancy-countdown"></span></p>
         </div>
       </section>
     </main>
